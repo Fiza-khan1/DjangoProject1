@@ -1,35 +1,40 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from .forms import UserRegisterForm
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from .forms import UploadFileForm
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
+# Imaginary function to handle an uploaded file.
+from .handler import handle_uploaded_file
+
+
+def upload_file(request):
+    if request.method == "POST":
+        form = UploadFileForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}!')
-            return redirect('login')
+            handle_uploaded_file(request.FILES["file"])
+            return redirect('success')
     else:
-        form = UserRegisterForm()
-    return render(request, 'register.html', {'form': form})
+        form = UploadFileForm()
+    return render(request, "upload.html", {"form": form})
 
-def user_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('home')
-        else:
-            messages.error(request, 'Invalid credentials')
-    return render(request, 'login.html')
+from django.shortcuts import redirect
+from django.http import HttpResponse
 
-def user_logout(request):
-    logout(request)
-    return redirect('login')
+def UploadSucc(request):
+    return HttpResponse("FILE UPLOAD SUCCESSFULLY")
 
-def home(request):
-    return render(request,'home.html')
+from .forms import ModelFormWithFileField
+
+def upload_fileWModel(request):
+    if request.method == "POST":
+        form = ModelFormWithFileField(request.POST, request.FILES)
+        if form.is_valid():
+            form.save() 
+            return HttpResponseRedirect("/success/url/")
+    else:
+        form = ModelFormWithFileField()
+    return render(request, "upload.html", {"form": form})
+
+
+
+
+
